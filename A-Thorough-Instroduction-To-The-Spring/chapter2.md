@@ -114,8 +114,6 @@ DI 컨테이너에 등록되는 빈의 이름을 기본적으로 클래스명의
     - 생성자나 설정자메서드를 쓰지않고 DI 컨테이너이너의 힘을 빌려 의종성을 주입하는 방식
     - 의종성을 주입하고 싶은 필드에 @Autowired 애너테이션을 달아주면된다.
 
-
-
 ### 2.1.5 오토와이어링
 명시적으로 @Bean을 정의하지 않고도 DI 컨테이너에 빈을 자동으로 주입하는 방식이다.
 
@@ -144,3 +142,81 @@ DI 컨테이너에 등록되는 빈의 이름을 기본적으로 클래스명의
 - 컬렉션이나 맵 타입으로 오토와이어링
     - 스프링에서는 인터페이스를 구현한 빈을 컬렉션이나(Collection)이나 맵(Map) 타입에 담에서 가져오는 방법도 제공한다.
 
+### 2.1.6 컴포넌트 스캔
+클래스 로더(Class Loader)를 스캔하면서 특정 클래스를 찾아 DI컨테이너에 등록하는 방법
+- 기본설정으러 컴포넌트 스캔하기
+- 다음과 같은 애너테이션이 붙은 클래스가 탐생 대상이 되고 탐색된 컴포넌트는 DI 컨테이너에 등록
+    ```
+        - @Component (org.springframework.stereotype.Component)
+        - @Controller (org.springframework.stereotype.Controller)
+        - @Service (org.springframework.stereotype.Service)
+        - @Repository (org.springframework.stereotype.Repository)
+        - @Configuration (org.springframework.context.annotation.Configuration)
+        - @RestController (org.springframework.web.bind.annotation.RestController)
+        - @ControllerAdvice (org.springframework.web.bind.annotation.ControllerAdvice)
+        - @ManagedBean (javax.annotation.ManagedBean)
+        - @Bamed (javax.inject.Named)
+    ```
+- 자바 기반에서는 @ComponentScan 애너테이션 사용
+- XML 기반에서는 &lt;context:component-scan&gt; 요소 사용
+- 클래스 로더위에서 애너테이션이 붙은 클래스를 찾아야하기때문에 탐색 범위가 넓고 시간도 오래걸림
+    - 애플리케이션 기동시간을 오래걸리게하는 원인
+
+- 스캔대상에서 가장 많이 활용되는 4가지
+    |애너테이션|설명|
+    |---------|----|
+    |@Controller|MVC 패턴에서의 C, 즉 컨틀롤러(Controller) 역할을 하는 컴포넌트에 붙이는 애너테이션, 클라이언트에서 오는 요청을 받고, 비지니스 로직의 처리 결과를 응답으로 돌려보내는 기능을 한다. 이때 실제 비지니스로직은 @Service가 붙은 컴포넌트에 처리하도록 위임한다.|
+    |@Service|비지니스 로직(service)을 처리하는 컴포넌트에 붙이는 애너테이션이다. 컨트롤러에서 받은 입력 데이터를 활용해 비지니스 로직을 실행하는 기능을 한다. 이때 영속적으로 보관해야 하는 데이터가 있따면 @Repository가 붙은 컴포넌트에서 처리하도록 위임한다.|
+    |@Repository|영속적인 데이터 처리를 수행하는 컴포넌트에 붙이는 애너테이션이다. ORM(Object-Relational Mapping) 관련 라이브러리를 활요앻 데이터의 CRUD를 처리하는 기능을한다.|
+    |@Component|위의 세 경우에 해당하지 않는 컴포넌트(유틸리티 클래스나 기타 자원 클래스 등)에 붙이는 애너네이션|
+
+
+
+추가로 다른 컴포넌트를 더 포함하고 싶다면 필터를 적용하는 압버으로 스캔 범위를 커스터마이징 할 수 있다.
+ - 애너테이션을 활용한 필터(ANNOTATION)
+ - 할당 가능한 타입을 활용한 필터(ASSIGNABLE_TYPE)
+ - 정규 표현식 패턴을 활용한 필터(REGEX)
+ - AspectJ 패턴을 활용한 필터(ASPECTJ)
+
+    
+### 2.1.7 빈 스코프
+ - DI 컨테이너는 빈의 의존관계뿐 아니라, 생존 기간(Bean scope)도 관리
+ - DI 컨테이너가 관리하는 빈은 기본적으로 싱글톤으로 만들어짐
+ - 스프링 프레임워크에서 사용 가능한 스코프
+    |스코프|설명|
+    |-----|----|
+    |singleton|DI 컨테이너를 기동 할 때 인스턴스가 하나 만들어지고, 이후부터는 그 인스턴스를 공유하는 방식이다. 기본 스코프이기 때문에 별도로 스코프를 지정하지 않았다면 singleton으로 간주한다.|
+    |prototype|DI 컨테이너에 빈을 요청할 때마다 새로운 빈 인스턴스가 만들어진다. 멀티 스레드 환경에서 오동작이 발생하지 않아야하는(thread-safe) 빈이라면 singleton 스코프가 아닌 prototype을 사용해야 한다.
+    |request|HTTP 요청이 들어올 때마다 새로운 빈 인스턴스가 만들어진다. 웹 애플리케이션을 만들때만 사용할 수 있다.
+    |session|HTTP 세션이 만들어 질때마다 새로운 빈 인스턴스가 만들어진다. 웹 애플리케이션을 만들 때만 사용할 수 있다.
+    |global session|포틀릿(portlet) 환경에서 글로벌 HTTP 세션이 만들어질 때마다 새로운 빈 인스턴스가 만들어진다. 포틀릿을 사용한 웹 애플리케이션을 만들 때만 사용할 수있다.
+    |application|서블릿 컨텍스트(Servlet Context)가 만들어질 때마다 빈 인스턴스가 만들어진다. 웹 애플리케이션을 만들때만 사용할 수 있다.
+    |custom|스코프 이름을 직접 정할 수 있고 정의한 규칙에 따라 빈 인스턴스를 만들 수 있다.
+- 스코프 설정
+    - 자바 기반 : @Scope 애너테이션에 스코프 이름을 지정 ex) @Scope("prototype")
+    - XML 기반 : &lt;bean&gt; 속성에 스코프 지정
+- 다른스코프의 빈 주입
+    - 스코프는 빈의 생존기간을 의미 => 빈간 스코프가 다르다. == 각 빈의 수명이 다르다.
+    - 다른 스코프의 빈주입 사용시
+        - @Lookup 애너테이션
+            - DI컨테이너는 메서드를 바이트 코드로 형태로 만드는 기능이 있다. DI 컨테이너가 빈을 LookUP 하는 메서드를 만들다음, 그 메서드를 의존할 빈에게 주입하게되는데, 이 기능을 룩업 메서드 인젝션(Lookup Method Injection)이라고 한다. 
+            - DI 컨테이너에게 룩업을 대행하게 하고 싶은 메서드에 @Lookup 애너테이션을 붙여줌
+            - final, private으로 지정하거나, 매개변수 지정하면 X
+            - @Lookup 애너테이션에는 value속성에 빈을 이름을 지정 할 수 있다. 지정하지 않으면 반환값 타입을 보고 룩업 대상 빈을 찾음
+        - 스코프트 르락시
+            - 기존 빈을 프락시로 감싼후, 이 프락시를 다른 빈에 주입하고, 주입받은 빈에서 이 프락시의 메서드를 호출하면 프락시 내부적으로 DI 컨테이너에서 빈을 룩업하고 룩업된 빈의 메서드를 실행하는 방식 
+            - 보통 request 스코프나 session 스코프같이 수명이 짧은 빈을 singleton 스코프와 같은 사애적으로 수명이 긴 빈에 주입할때 사용
+            -자바기반 설정시 @Scope 애너테이션을 붙인 다음 proxyMode 속성에 프록시를 만드는방법을 지정하면된다.
+            - proxyMode 속성
+                - ScopedProxyMode.INTERFACES
+                    - JDK의 동적 프락시(java.lang.reflect.Proxy)를 사용해 인터페이스 기반의 프락시를 만든다.
+                - ScopedProxyMode.TARGET_CLASS
+                    - 스프링 프레임워크에 내장된 GCLIB을 사용해 서브클래스 기반의 프락시를 만든다.
+            - XML 기반 설정시  &lt;aop:scoped-proxy&gt;요소를 사용한다.
+            - 스프링프레임워크 공식문서에는 request, session, globalSession 스코프에서 스코프트 프락시를 사용하고, prototype 스코프에 대해서는 룩업 메서드 인젝션을 사용하도록 안내하고 있다.
+            - prototype 스코프에서 스코프트 프락시를 사용하지 못하는 것은 아니지만, 주입된 필드에서 프락시 안에있는 메서드를 한번더 호출하기때문에 매번 새로운 인스턴스가 만들어질 때마다 가 각 프락시의 메서드가 반복해서 호출됨으로 효율성 측면에서 바람직하지 않다는 점을 감안해야한다.
+ - 커스텀 스코프
+    - 사용자가 직접 정의한 커스텀 스코프를 만들 수 있다.
+    - Scope 인터페이스를 구현
+    - CustomScopeConfigurer에 자신이 만든 스코프를 스코프명과 함께 설정
+    
