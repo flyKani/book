@@ -223,3 +223,73 @@ DI 컨테이너에 등록되는 빈의 이름을 기본적으로 클래스명의
     - Scope 인터페이스를 구현
     - CustomScopeConfigurer에 자신이 만든 스코프를 스코프명과 함께 설정
 
+### 2.1.8 빈의 생명 주기
+ 1. initialzation (빈의 초기화 단계)
+ 2. activation (빈의 사용 단계)
+ 3. destruction (빈의 종료단계)
+
+ #### 초기화 단계
+ 1. 빈 설정 읽기 및 보완
+    1) 빈 설정 정보 읽어오기
+    2) 빈 설정 정보 보완 처리
+ 2. 빈 생성 및 의존 관계 해결
+    1) Contructor Injection 
+    2) Field Injection
+    3) Setter Injection
+ 3. 빈 생성 후 초기화 작업
+    1) Bean Post Processor 전처리
+    2) Bean Post Processor 초기화 처리
+    3) Bean Post Processor 후처리
+
+
+#### 빈 설정 정보 읽기 및 보완
+1. 빈의 생성하는데 필요 한 정보를 수집(자바 Configuration, XML, 애너테이션 커포넌트 스캔중) 정보만 불러오는 단계로 빈을 생서하지 않는다.
+2. Bean Factory Post Processor(BFPP)를 사용해 빈의 정보를 보완
+    - org.springframework.beans.config.BeanFactoryPostProcessor를 구연한  클래스가 수행
+    - Property placehoder는 이시점에 실제 프로퍼티 값으로 치환
+#### 빈 생성 및 의존 관계 해결
+빈의 정보를 읽고,빈 인스턴스를 성공적으로 생성했다면 의존 관계를 해결하기 위한 의존성 주입을 한다. 실제 수행되는순서는 다음과 같다.
+1. 생성자 기반 의존성 주입
+2. 필드 기반 의존성주입
+3. 세터 기반 의존성 주입
+
+#### 빈 생성 후 초기화 작업(bean initialization callback)
+ 빈 샌성 후의 초기화 작업(Post Construct)이 수행된다.
+ 크게 전처리, 초기화 처리, 후처리로 구분된다.
+ 초기화 부분의 처리 순서
+ ```
+  - 애너테이션 기반 : @PostConstruct애너테이션이 붙은 메서드
+  - InitializingBean 인터페이스를 구현한 경우, afterPropertiesSet 메서드
+  - 자바 기반의 설정의 경우 @Bean의 initMethod 속성에 지정한 메서드
+  - XML 기반 설정을 사용하는 경우, <bean> 요소의 init-method 속성에 지정한 메서드
+ ```
+ 빈이 생성이된 후에 이뤄지는 초기화는 빈을 생성할 때 해주는 초기화와 큰 차이가 있는데, 그것은 의존성 주입이 끝난 필드 값을 초기화에 활용 할 수있다는 점.
+ 전처리와 후처리는 BeanPostProcessor(BPP) 인터페이스(org.springframework.beans.factory.config.BeanPostProcessor)의 메서드를 통해 실행된다. 
+```
+public interface BeanPostProcessr {
+    // 전처리
+    Object postProcessBeforeInitialization(Object bean, String beanName);
+    // 전처리
+    Object postProcessAfterInitialization(Object bean, String beanName);
+}
+```
+@PostConstruct 애너테이션을 활동하는 경우 반환 값이 void 이고 메서드 변수는 없어야한다. 같은 처리로는 InitializingBean 인터페이스를 구현하다음 afterPropertiesSet 메서드로 대체 할수도 있다. 또, 어떠한 이유로 @PostContruct 애너테이션이나, intializingBean인터페이스를 구현하지 못하는 경우 @Bean애너테이션에 initMehtod 속성에 Method명을 지정하거나, xml의경우 &lt;bean&gt;에 init-method속성에 메서드명을 지정하면된다.
+
+### 종료 단계
+스프링 프레임워크에서는 빈이 파괴되기 전에 전처리(PreDestory) 할 수 있는 방법을 제공한다.
+#### 빈이 파괴되기 전에 전처리 수행
+빈 생성후 초기화(PostConstruct)와 동작 방식이나 구조는 대칭, 동작은 반대로 
+전처리 순서
+ ```
+  - 애너테이션 기반 : @PreDestroy애너테이션이 붙은 메서드
+  - DisposableBean 인터페이스를 구현한 경우, destory 메서드
+  - 자바 기반의 설정의 경우 @Bean의 destoryMethod 속성에 지정한 메서드
+  - XML 기반 설정을 사용하는 경우, <bean> 요소의 destory-method 속성에 지정한 메서드
+ ```
+ 빈 파괴의 전의 전처리(Pre Destory) 작업은 prototype 스코프의 빈에서는 동작하지 않는다.
+
+ ### DI 컨테이너 종료
+ ConfigurableApplicationContext 인터페이스 ApplicationContext 인터페이스를 확장한 서브 인터페이스로, 우리가 사용하는 DI 컨테이너가 바로 ConfigurableApplicationContext 인터페이스의 구현체다. 이 이넡페이스는 close라는 메서드가 있고 이것을 호출하면 DI 컨테이너가 종료된다.  
+
+
+ 
