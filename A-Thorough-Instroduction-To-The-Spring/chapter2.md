@@ -293,3 +293,57 @@ public interface BeanPostProcessr {
 
 
  
+### 2.1.9 빈 설정 분할
+DI 컨테이너에서 고나리하는 빈이 많아지면 많아질수록 설정 내용도 많아져서 관리기 어려움
+빈 섲렁 법위를 명학히, 가독송도 높이기 위해 목적에 맞게 분할 하는 것이 좋음.
+- 자바기반 설정의 분할
+    - @Import 애너테이션 활용
+- XML 기반 설정
+    - &lt;import&gt; 요소를 사용
+
+### 2.1.10 프로파일별 설정 구현
+설정 파일을 특정 환경이나 목적에 맞게 선택적으로 사용 할 수있도록 그룹 화 할 수있으며, 이기능을 profile 이라고한다.
+#### 프로파일 정의 
+ - 자바기반
+    - @Profile
+    - @Profile({"development", "stating"}), @Profile("production") 과 같이 사용. @Profile("!production") 같이 부정형으로도 표현가능.
+ - XML 기반
+    - &lt;beans&gt; 요소의 profile 속성 사용
+
+별도로 프로파일이 지정되어있지않으면, 모든 프로파일에서 사용가능
+
+
+#### 프로파일 선택
+프포파일 설정을 정리했다면, 어떤 프로파일을 선택해야할지 알려줘야한다. 이 정보는 자바의 시스템 프로퍼티를 통해 전달할 수있는데, 자바 애플리케이션을 실행할때 명령행 옵션으로 spring.profiles.active라는 프로퍼티 값과 사용할 프로퍼티파일 이름을 지정하면된다.
+
+자바 명령행 옵션으로 프로파일 지정
+> -Dspring.profiles.active=production
+
+환경 변수로 프로파일 지정하는 방법
+> export SPRING_PROFILES_ACTIVE=production
+
+web.xml 프로파일을 지정하는 방법
+> &lt;context-param&gt;<br>
+> &nbsp;&nbsp;&nbsp;&nbsp; &lt;param-name&gt;spring.profiles.active&lt;/param-name&gt;<br>
+> &nbsp;&nbsp;&nbsp;&nbsp; &lt;param-value&gt;production&lt;/param-value&gt;<br>
+> &lt;/context-param&gt;
+
+웹 애플리케이션이라면 xml에 default설정후에 spring.profiles.active로 지정해 기본 프로파일을 덮어쓰면 된다.
+
+
+### 2.1.11 JSR 330
+자바 표준 사양중에서는 DI와 관련해서 JSR 330(Dependency Injection for Java)라는 것이 있다. 이 사양에서는 DI기능을 사용하기 위한 API(주로 애너테이션)가 정의되어있다.
+JSR 330 관련 클래스가 클래스패스 상에 있다면 DI 컨테이너가 컴포넌트 스캔을 할때 JSR 330에서 정의한 애너테이션을 붙인 빈도 관리 대상으로 포함시킨다. 때문에 DI 관련 섲렁 자체는 스프링 프레임워크에 의존하지 않고 자바 표준 클래스만으로도 표현 할 수 있다.
+
+JSR 330과 스프링 프레임워크 애너테이션 비교
+|스프링 프레임워크|JSR 330    |설명                                                                                   |
+|---------------|-----------|---------------------------------------------------------------------------------------|
+|@Autowired     |@Inject    |@Inject에는 필수 체크 속성(requied)이 없다.|
+|@Component     |@Named     |스프링 프레임워크에서는 singleton이 기본 스코프지만 JSR 330에서는 prototype이 기본 스코프다.|
+|@Qualifier     |@Named     |@Named가 @Compoent와 @Qualifier의 기능을 겸한다.|
+|@Scope         |@Scope     |JSR 330dml @Scope는 커스텀 스코프를 정의하기 위한 메타 애너테이션이기 때문에 @Scope 애너테이션으로 스코프를                                   지정하지 못한다. 기본적으로 구현되어 제공되는 스코프는 @Singleton이 유일하다. |
+
+스프링 프레임워크와 JSR330에서 사용하는 기본 스코프가 서로 다르다.
+스프링 프레임워크에서 컴포넌트 스캔을 할때 JSR 330 사양에 맞춰 기본 스코프를 prototype 스코프로 바꿔주려면 다음과같이 설정한다.
+@Component애너테이션에 scopeResolver=jsr330ScopeMetadataResolver.class를 추가한다.
+단 기본 스코프가 바뀌는 것은 의도치 않은 오동작을 유발할 수 있으으로 굳이 자바 표준 API를 고집하는게 아니라면 스프링 애너테이션으로 통일하는것이 존다.
