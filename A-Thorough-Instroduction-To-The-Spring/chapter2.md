@@ -341,9 +341,9 @@ JSR 330과 스프링 프레임워크 애너테이션 비교
 |@Autowired     |@Inject    |@Inject에는 필수 체크 속성(requied)이 없다.|
 |@Component     |@Named     |스프링 프레임워크에서는 singleton이 기본 스코프지만 JSR 330에서는 prototype이 기본 스코프다.|
 |@Qualifier     |@Named     |@Named가 @Compoent와 @Qualifier의 기능을 겸한다.|
-|@Scope         |@Scope     |JSR 330dml @Scope는 커스텀 스코프를 정의하기 위한 메타 애너테이션이기 때문에 @Scope 애너테이션으로 스코프를                                   지정하지 못한다. 기본적으로 구현되어 제공되는 스코프는 @Singleton이 유일하다. |
+|@Scope         |@Scope     |JSR 330의 @Scope는 커스텀 스코프를 정의하기 위한 메타 애너테이션이기 때문에 @Scope 애너테이션으로 스코프를  지정하지 못한다. 기본적으로 구현되어 제공되는 스코프는 @Singleton이 유일하다. |
 
 스프링 프레임워크와 JSR330에서 사용하는 기본 스코프가 서로 다르다.
 스프링 프레임워크에서 컴포넌트 스캔을 할때 JSR 330 사양에 맞춰 기본 스코프를 prototype 스코프로 바꿔주려면 다음과같이 설정한다.
 @Component애너테이션에 scopeResolver=jsr330ScopeMetadataResolver.class를 추가한다.
-단 기본 스코프가 바뀌는 것은 의도치 않은 오동작을 유발할 수 있으으로 굳이 자바 표준 API를 고집하는게 아니라면 스프링 애너테이션으로 통일하는것이 존다.
+단 기본 스코프가 바뀌는 것은 의도치 않은  오동작을 유발할 수 있으으로 굳이 자바 표준 API를 고집하는게 아니라면 스프링 애너테이션으로 통일하는것이 존다.
