@@ -644,7 +644,6 @@ DI 컨테이너에 등록된 MessageSource를 주입 받은 다음 getMessage �
     messageSource.setBasenames("messages");
     messageSource.setDefaultEncoding("UTF-8");
     return messageSource;
-    r
 ```
 
 ### 2.7.4 다국어 지원하기(Page. 127)
