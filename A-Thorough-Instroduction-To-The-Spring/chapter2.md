@@ -588,4 +588,64 @@ SpEL은 XML 기반이나 애터네이션 기반 빈 설정방식에도 사용할
 #### 컬렉션
  - 컬렉션안에서 조건과 일치하는 요소를 추출하기 위한 표현(Collection Selection)이나 컬렉션 안에 있는 요소가 가진 특정 프로퍼티의 갑슬 추출하기 위한 표현(Collection Projection)을 지원한다.
 
+## 2.6 리소스 수상화 
+스프링 프레임워크의 리소스 추상화 기능을 활용하면 구체적인 위치 정보를 직접 다루지 않더라도 리소스에 접근 할 수있다.
  
+### 2.6.1 Resource 인터페이스와 구현 클래스 (Page. 116)
+Resource 인터페이스와 WriteableResource 인터페이스 제공한다. 구현 클래스는 직접 골라 사용해도 되지만, 스프링 프레임워크는 위치를 보고 적절한 구현클래스를 선택할 수 있는 기능을 제공한다.(ResourceLoader Interface)
+
+### 2.6.2 ResourceLoader 인터페이스와 구현 클래스 (Page. 117)
+Resource객체를 생성하는 과정을 추상화하기 위해 ResourceLoader 인터페이스를 제공한다. DI컨테이너를 구성하는 다양한 ApplicationContext 인터페이스의 구현 클래스는 모두 이 인터페이스를 구현하고 있다.
+
+### 2.6.3 Resource 인터페이스를 활용한 리소스 접근 (Page. 118)
+Resource 인터페이스를 활용한 다양한 접근 방법소개. (URL, File 등) 스프링 프레임워크상의 프로퍼티 기능을 활용해 Resource 객체 주입 가능.
+
+### 2.6.4 XML 파일에서 리소스 지정
+XML 기반 설정 방식에서 빈을 정의할 때 프로퍼티 파일을 참조하거나 또 다른 빈 정의 파일을 포함하는 과정에서 Resource 인터페이스의 구현 클래스가 사용된다.
+
+## 2.7 메시지 관리 
+
+### 2.7.1 MessageSource 인터페이스와 구현 클래스(Page. 122)
+스프링프레임워크는 외부에서 메시지 정보를 가져오는 기능을 제공하는데, 그 핵심이 MessageSource 인터페이스 이다. MessageSource는 메시지 정보의 출처를 추상화하기 위한 것으로, 어딘가에 있을 메시지 정보를 가져오기 위해 getMessage 메서드를 제공한다.
+
+### 2.7.2 MessageSource 사용
+스프링프에임워크는 다양한 형태의 MessageSource 구현 클래스를 제공한다.
+#### MessageSource의 Bean 정의
+ResouceBundleMessageSource를 사용한 예
+```
+    @bean 
+    public MessageSource messageSource(){
+        ResouceBundleMessageSource messageSource = new ResourceBundleMessageSource();
+        //  클래스패스상에 있는 프로퍼티 파일읠 확장자를 제외하고 지정
+        messageSource.setBasenames("messages");
+        return messageSource;
+    }
+```
+#### 메시지 정의
+```
+    # 님, 안녕하세요.
+    welcome.message=\ub2d8, \uc548\ub155\ud558\uc138\uc694.
+```
+영문이나, 숫자와 같이 ASCII 코드로 표현할수 없는 한글과 같은 문자를 메시지에 사용하고 싶다면 Unicode를 사용하되, 아스키 코드에서 사용 가능한 문자료 표현해야한다.
+JDK에는 native2ascii라는 툴이 있다.
+ 
+#### MessageSource의 API 활용
+DI 컨테이너에 등록된 MessageSource를 주입 받은 다음 getMessage 메서드를 호출하면된다.
+
+#### MessageSourceResolvable의 활용
+메시지에 포함할 인수 값조차 프로퍼티 파일에서 읽어오고 싶은경우에는 DefaultMessageSourceResolvable 클래스를 활용한다.
+
+
+
+### 2.7.3 프로퍼티 파일을 UTF-8로 인코딩
+프로퍼티 파일에 메시지를 저장할 때 유니코드를 아스키 문자열로 변환한 문자열을 사용했는데, 프로퍼티 파일이 ISO-8859-1로 인코딩되는 것이 사양에 규정돼 있기 때문이다.
+```
+    ResouceBundleMessageSource messageSource = new ResourceBundleMessageSource();
+    messageSource.setBasenames("messages");
+    messageSource.setDefaultEncoding("UTF-8");
+    return messageSource;
+    r
+```
+
+### 2.7.4 다국어 지원하기(Page. 127)
+MessageResouce의 구현 클래스는 국가별로 메시지의 언어를 다르게 적용할 수있는데 국제화 기능을 갖추고있다. 언어마다 프로퍼티를 따로만들고 Java SE의 resouceBundle 사양에 지원하는 로캘을 선택하면 된다.
