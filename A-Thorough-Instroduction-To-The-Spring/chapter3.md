@@ -117,3 +117,72 @@ public class DatasourceEmbeddedConfig{
     }
 }
 ```
+
+## 3.2. 스프링 JDBC
+
+### 3.2.1. 스프링 JDBC 개요 
+스프링 JDBC는 SQL의 실제 내용과 상관없이 공통적이면서도 반복적으로 수행되는 JDBC 처리를 개발자가 직접 구현하는 대신 프레임워크가 대행하는 기능을 제공한다.
+
+프레임워크가 대신 처리(공통적이면서도 반복적인)
+ - 커넥션 연결과 종료
+ - SQL 문의 실행
+ - SQL 문 실행 결과 행에 대한 반복 처리
+ - 예외 처리
+
+ 개발자가 구현할 부분
+ - SQL 문의 정의
+ - 파라메터 설정
+ - ResultSet에서 결과를 가져온 후, 각 레코드별로 필요한 처리
+
+### 3.2.2. JdbcTemplate 클래스르 활용한 CRUD
+  SQL 만 가지고도 데이터베이스를 쉽게 다룰 수 있게 도와주는 클래스를 제공한다. 특히 NamedParameterJdbcTemplate 클래스는 사실상 데이터를 조작하는 처리를 JdbcTemplate클래스에 위임하게되는데 이 둘의 차이는 JdbcTemplate 클래스가 데이터 바인딩시 ? 문자를 플레이스홀더로 사용하는반면, NamedParameterJdbcTemplate 클래스는 데이터 바인딩시 파라메터 이름을 사용할 수 있어서 ?를 사용할때보다 좀 더 직관적으로 데이터를 다룰 수 있게 해준다는 것이다. <br>
+  JdbcTemplate 클래스를 애플리케이션에서 사용 할 때는 개발자가 직접 JdbcTemplate를 만들어 쓰기보다는 DI 컨테이너가 만든 JdbcTemplate을 @Autowired 애너테이션으로 주입받아쓰는것이 일반적이다.
+
+#### JdbcTemplate 클래스가 제공하는 주요 메서드
+ 
+ |메서드|설명|
+ |----|----|
+ |queryForObject|하나의 결과 레코드중에서 하나의 컬럼 값을 가져올 때 사용함. RowMapper와 함께 사용하면 하나의 레코드 정보를 객체에 맵핑할 수있음|
+ |queryForMap|하나의 결과 레코드 정보를 Map 형태로 맵핑 할 수있음|
+ |queryForList|여러 개의 결과 레코드를 다룰 수 있음, List의 한 요소가 한 레코드에 해당, 한 레코드의 정보는 queryForObject나 queryForMap을 사용할 때와 같음|
+ |query|ResultSetExtractor, RowCallbackHandler와 함께 조회할 때 사용함|
+ |update|데이터를 변경하는 SQL(예: INSERT, DELETE, UPDATE)을 실행할 때 사용함|
+
+ 
+#### 3.2.3. SQL 질의 결과를 POJO로 반환
+스프링 JDBC는 처리 결과 값을 자바가 기보넞긍로 제공하는 데이터 타입이나, Map, List 같은 컬렉션 타입으로 반환한다. 보통 애플리케이션을 개발할 때는 자바에서 제공하는 타입이 아니라 해당 비지니스에 마는 데이터 타입을 POJO 형태로 만들어 쓰는 경향이 있기 때문에 반환값을 가공해야 할 수있다. 스프링 JDBC에서는 기본저긍로 반환된 결과값을 원하는 형태로 변환하기 쉽도록 다음과같은 3가지 인터페이스를 제공한다. 
+
+ |메서드|설명|
+ |----|----|
+ |RowMapper|RowMapper 인터페이스는 JDBC의 ResultSet을 순차적으로 읽으면서 원하는 POJO 형태로 맵핑하고 싶을 때 사용한다. 그래서 이 인터페이스를 사용하면, ResultSet의 한 행(Row)를 읽어 하나의 POJO 객체로 변환 할 수 있다. 두 ResultSetExtractor와의 차이점은 ResultSet의 한 행이 하나의 POJO 객체로 변환디ㅗ고, ResultSet이 다음 행으로 넘어가는 커서 제어를 개발자가 직접하지 않고 스프링 프레임워크가 대신해준다는 점이다.|
+ |ResultSetExtractor| ResultSetExtractor 인터페이스는 JDBC의 ResultSet을 자유롭게 제어하면서 원하는 POJO 형태로 맵핑하고 싶을때 사용한다. RowMapper와의 차이점은 ResultSet의 여러 행 사이를 자유롭게 이동할 수 있다는 점이다. RowMapper는 ResultSet에서 한 행씩만 참조할 수 있어서 다음 행으로 커서를 이동하는 next같은 메서드를 제공하지 않는다 그래서 ResultSetExtractor를 사용하면 ResultSet의 여러 행에서 필요한 값을 꺼내서 하나의 POJO객체에 채워넣을 수 있따.
+|RowCallbackHandler|RowCallbackHandler 인터페이스의 메서드는 반환값이 없다 그래서 JDBC의 ResultSet 정보 처리 결과를 반환하기 위해 사용하는 것 이 아니라 별도의 다른 처리를 하고 싶을 때 사용한다. 예를 들면, ResultSet에서 읽은 데이터를 파일 형태로 출력하거나, 조회된 데이터를 검증하는 용도로 활용할 수 있다. 
+
+#### 3.2.4. 데이터 일괄처리
+- 배치처리
+    - NamedParameterJdbcTemplate 클래스에 batchUpdate 메서드 활용
+- 저장 프로시저 호출
+    - JdbcTemplate 클래스의 call 메서드와 execute메서드로 실행
+        - StoredProcedure 클래스와 SimpleJdbcCall 클래스등 항솽에 맞게 적절한 것 을 골라 쓸 것.
+
+## 3.3. 트랜젝션관리
+
+### 3.3.1. 트랜젝션 관리자
+스프링 트랜잭션 처리에 중심이 되는 인터페이스 PlatformTransactionManager
+- PlatformTransactionManager를 직접호출하지 않고 스프링이 제공하는 API를 사용하는 사례가 많아짐
+
+PlatformTransactionManager의 대표적인 구현 클래스
+ |클래스명|설명|
+ |----|----|
+ |DataSourceTransactionManager|JDBC 및 마이바티스등 JDBC 기반 라이브러리 데이터베이스에 접근하는 경우 이용한다.|
+ |HibernateTransactionManager|하이버네이트를 이용해 데이터베이스에 접근하는 경우 이용한다.|
+ |JpaTransactionManager|JPA로 데이터베이스에 접근하는 경우 이용한다.|
+ |JtaTransactionManager|JTA에서 트랜잭션을 관리하는 경우 이용한다.|
+ |WebLogicJtaTransactionManager|애플리케이션 서버인 웹로직의 JTA에서 트랜잭션을 관리하는 경우 이용한다.|
+ |WebSphereUowJtaTransactionManager|애플리케이션 서버인 웹스피어의 JTA에서 트랜잭션을 관리하는 경우 이용한다.|
+
+트랜잭션 관리자의 정의 
+ - PlatformTransactionManager의 빈의 정의한다.
+ - 트랜잭션을 관리하는 메서드를 정의한다.
+
+ 
