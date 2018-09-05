@@ -185,4 +185,44 @@ PlatformTransactionManager의 대표적인 구현 클래스
  - PlatformTransactionManager의 빈의 정의한다.
  - 트랜잭션을 관리하는 메서드를 정의한다.
 
- 
+글로벌 트랜잭션의 경우 JTA Transaction Manager를 사용, 다만 애플리케이션 서버 제품이 따라 조금씩 동작방식이 다를수있어 서브클래스를 제공 되기도한다.
+
+
+### 3.3.2. 선언적 트랜젝션
+
+#### @Transaction을 이용한 트랜잭션
+@Transaction 애너테이션을 빈의 public 메서드에 추가하는 것으로 대상 메서드의 지작 종료에 맞춰 트랜잭션을 시작, 커밋 할 수있다, 기본상태에서는  unchecked Expception이 발생하면 자동으로 롤백된다.
+
+#### 트랜젝션 제어에 필요한 정보
+ |속성|설명|
+ |----|----|
+ |value|여러 트랜잭션 관리자를 이용하는 경우 트랜잭션 관리자의 qualifier를 지정한다. 기본트랜잭션 관리자를 사용하면 생략할 수 있다.
+ |transactionManager|value의 별칭(스프링 4.2 버전부터 추가)
+ |propagation|트랜잭션의 전파 방식을 지정한다.|
+ |isolation|트랜잭션의 격리 수준을 지정한다.|
+ |timeout|트랜잭션 제한 시간(초)을 지정한다. 기본값은 -1(사용하는 데이터베이싀 사양이나 설정에 따라 다름)|
+ |readOnly|트랜잭션의 읽기 전용 플래그를 지정한다. 기본값은 false(읽기전용이 아님)|
+ |rollbackFor|여기에 지정한 예외가 발생하면 트랜잭션을 롤백시킨다. 예외 클래스명을 여러개 나열할 수 있으며, ','으로 구분한다. 따로 지정해주지 않았다면 RuntimeException과 같은 비검사 예외가 발생할 때 트랜잭션이 롤백 된다.|
+ |rollbackForClassName| 여기에 지정한 예외바 발생하면 트랜잭션을 롤백시킨다. 예외 이름을 여러 개 나열할 수있으며, ','로 구분한다.|
+ |noRollbackFor|예기에 지정한 예외가 발생하더라도 트랜잭션을 롤백시키지 않는다. 예외 클래스명을 여러개 나열할 수있으며, ','로 구분한다.|
+ |noRollbackForClassName| 여기에 지정한 예외가 발생하더라도 트랜잭션을 롤백시키지 않는다. 예외 이름을 여러개 나열할 수 있으며, ','로 구분한다.|
+
+### 3.3.3. 명시적 트랜잭션 
+
+#### PlatformTransactionManager를 이용한 명시적 트랜잭션 제어
+TransactionDefinition 및 TransactionStatus를 이용해 트랜잭션의 시작과 커밋, 그리고 롤백을 명시적으로 처리
+
+#### TransactionTemplate을 활용한 명시적 트랜잭션 제어 
+PlatfromTransactionManager보다도 구조적으로 트랜잭션 제어를 기술 할 수 있다. TransactionCallback 인터페이스가 제공하는 메서드에 구현하고 TransactionTemplate의 execute 메서드에 인수로 전달 한다.
+
+### 3.3.4 트랜잭션 격리 수준과 전파 방식
+
+#### 트랜잭션 격리수준
+@Transactional의 isaolation 속성, TransactionDefinition과 TransacltionTemplate의 setIsolationLevel 메서드에 지정 할 수 있다.
+ |트랜잭션 격리 수준|설명|
+ |----|----|
+ |DEFAULT|사용하는 데티터베이스의 기본 격리 수준을 이용한다.|
+ |READ_UNCOMMITTED|더티 리드(Dirty Read), 반복되지 않은 읽기(Unrepeatable Read), 팬텀 읽기(Phantom Read)가 발생한다. 이 격리 수준은 커밋되지 않은 변경 데이터를 다른 트랜잭션에 참조하는 것을 허용한다. 만약 변경 데이터가 롤백 된경우 다음 트랜잭션에 무효한 데이터를 조회하게된다.|
+ |READ_COMMITED|더티 리드를 방지하지만 반복되지 않은 읽기, 팬텀 읽기는 발생한다. 이 격리 수준은 커밋되지 않은 변경 데이터를 다른 트랜잭션에 참조하는 것을 금지한다.|
+ |REPATABLE_READ| 더티 리드, 반복되지 않는 읽기를 방지하지만 팬텀 읽기는 발생한다.|
+ |SERIALIZABLE|더티 리드, 반복되지 않은 읽기, 팬텀 읽기를 방지한다.|
